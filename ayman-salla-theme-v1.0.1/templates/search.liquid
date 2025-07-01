@@ -1,0 +1,414 @@
+{% comment %}
+  صفحة البحث - Search Page
+  عرض نتائج البحث مع إمكانية التصفية
+{% endcomment %}
+
+<div class="search-page" style="padding: 2rem 0;">
+  <div class="container">
+    
+    {% comment %} رأس صفحة البحث {% endcomment %}
+    <div class="search-header" style="text-align: center; margin-bottom: 3rem;">
+      <h1 style="font-size: 2.5rem; font-weight: bold; color: var(--color-text); margin-bottom: 1rem;">
+        البحث
+      </h1>
+      
+      {% comment %} نموذج البحث {% endcomment %}
+      <div style="max-width: 500px; margin: 0 auto 2rem;">
+        <form action="/search" method="get" style="position: relative;">
+          <input 
+            type="search" 
+            name="q" 
+            value="{{ search.terms | escape }}"
+            placeholder="ابحث عن المنتجات..." 
+            autocomplete="off"
+            style="width: 100%; padding: 1rem 3rem 1rem 1rem; border: 2px solid var(--color-primary); border-radius: var(--border-radius); font-size: 1.1rem; background: var(--color-surface);"
+          >
+          <button 
+            type="submit" 
+            style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--color-primary); cursor: pointer;"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+            </svg>
+          </button>
+        </form>
+      </div>
+
+      {% if search.performed %}
+        {% if search.terms != blank %}
+          <p style="color: var(--color-text-muted); font-size: 1.1rem;">
+            {% if search.results_count > 0 %}
+              تم العثور على {{ search.results_count }} 
+              {% if search.results_count == 1 %}نتيجة{% else %}نتيجة{% endif %}
+              للبحث عن "{{ search.terms }}"
+            {% else %}
+              لم يتم العثور على نتائج للبحث عن "{{ search.terms }}"
+            {% endif %}
+          </p>
+        {% endif %}
+      {% endif %}
+    </div>
+
+    {% if search.performed %}
+      {% if search.results_count > 0 %}
+        
+        {% comment %} شريط التصفية {% endcomment %}
+        <div class="search-filters" style="margin-bottom: 2rem;">
+          <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+            <span style="color: var(--color-text); font-weight: 600;">تصفية النتائج:</span>
+            
+            {% comment %} تصفية حسب النوع {% endcomment %}
+            <div style="display: flex; gap: 0.5rem;">
+              <button 
+                onclick="filterResults('all')" 
+                class="filter-btn active" 
+                data-filter="all"
+                style="padding: 0.5rem 1rem; border: 1px solid var(--color-primary); border-radius: 20px; background: var(--color-primary); color: white; cursor: pointer; transition: var(--transition-fast);"
+              >
+                الكل ({{ search.results_count }})
+              </button>
+              
+              {% assign product_count = 0 %}
+              {% assign page_count = 0 %}
+              {% assign article_count = 0 %}
+              
+              {% for item in search.results %}
+                {% case item.object_type %}
+                  {% when 'product' %}
+                    {% assign product_count = product_count | plus: 1 %}
+                  {% when 'page' %}
+                    {% assign page_count = page_count | plus: 1 %}
+                  {% when 'article' %}
+                    {% assign article_count = article_count | plus: 1 %}
+                {% endcase %}
+              {% endfor %}
+              
+              {% if product_count > 0 %}
+                <button 
+                  onclick="filterResults('product')" 
+                  class="filter-btn" 
+                  data-filter="product"
+                  style="padding: 0.5rem 1rem; border: 1px solid var(--color-primary); border-radius: 20px; background: transparent; color: var(--color-primary); cursor: pointer; transition: var(--transition-fast);"
+                >
+                  المنتجات ({{ product_count }})
+                </button>
+              {% endif %}
+              
+              {% if page_count > 0 %}
+                <button 
+                  onclick="filterResults('page')" 
+                  class="filter-btn" 
+                  data-filter="page"
+                  style="padding: 0.5rem 1rem; border: 1px solid var(--color-primary); border-radius: 20px; background: transparent; color: var(--color-primary); cursor: pointer; transition: var(--transition-fast);"
+                >
+                  الصفحات ({{ page_count }})
+                </button>
+              {% endif %}
+              
+              {% if article_count > 0 %}
+                <button 
+                  onclick="filterResults('article')" 
+                  class="filter-btn" 
+                  data-filter="article"
+                  style="padding: 0.5rem 1rem; border: 1px solid var(--color-primary); border-radius: 20px; background: transparent; color: var(--color-primary); cursor: pointer; transition: var(--transition-fast);"
+                >
+                  المقالات ({{ article_count }})
+                </button>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        {% comment %} نتائج البحث {% endcomment %}
+        <div class="search-results">
+          
+          {% comment %} المنتجات {% endcomment %}
+          {% assign product_results = search.results | where: 'object_type', 'product' %}
+          {% if product_results.size > 0 %}
+            <div class="search-products" data-type="product">
+              <h2 style="font-size: 1.8rem; font-weight: bold; color: var(--color-text); margin-bottom: 2rem; border-bottom: 2px solid var(--color-primary); padding-bottom: 0.5rem; display: inline-block;">
+                المنتجات
+              </h2>
+              
+              <div class="products-grid">
+                {% for product in product_results %}
+                  {% render 'product-card', product: product, index: forloop.index %}
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+
+          {% comment %} الصفحات {% endcomment %}
+          {% assign page_results = search.results | where: 'object_type', 'page' %}
+          {% if page_results.size > 0 %}
+            <div class="search-pages" data-type="page" style="margin-top: 3rem;">
+              <h2 style="font-size: 1.8rem; font-weight: bold; color: var(--color-text); margin-bottom: 2rem; border-bottom: 2px solid var(--color-primary); padding-bottom: 0.5rem; display: inline-block;">
+                الصفحات
+              </h2>
+              
+              <div style="display: grid; gap: 1.5rem;">
+                {% for page in page_results %}
+                  <div style="background: var(--color-surface); padding: 2rem; border-radius: var(--border-radius); box-shadow: var(--shadow-md); transition: var(--transition-slow);">
+                    <h3 style="font-size: 1.3rem; font-weight: 600; margin-bottom: 1rem;">
+                      <a href="{{ page.url }}" style="color: var(--color-text); text-decoration: none;">
+                        {{ page.title }}
+                      </a>
+                    </h3>
+                    
+                    {% if page.content != blank %}
+                      <p style="color: var(--color-text-muted); line-height: 1.6; margin-bottom: 1rem;">
+                        {{ page.content | strip_html | truncate: 200 }}
+                      </p>
+                    {% endif %}
+                    
+                    <a href="{{ page.url }}" style="color: var(--color-primary); text-decoration: none; font-weight: 500;">
+                      قراءة المزيد →
+                    </a>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+
+          {% comment %} المقالات {% endcomment %}
+          {% assign article_results = search.results | where: 'object_type', 'article' %}
+          {% if article_results.size > 0 %}
+            <div class="search-articles" data-type="article" style="margin-top: 3rem;">
+              <h2 style="font-size: 1.8rem; font-weight: bold; color: var(--color-text); margin-bottom: 2rem; border-bottom: 2px solid var(--color-primary); padding-bottom: 0.5rem; display: inline-block;">
+                المقالات
+              </h2>
+              
+              <div style="display: grid; gap: 1.5rem;">
+                {% for article in article_results %}
+                  <div style="background: var(--color-surface); padding: 2rem; border-radius: var(--border-radius); box-shadow: var(--shadow-md); transition: var(--transition-slow);">
+                    <div style="display: flex; gap: 1.5rem;">
+                      {% if article.featured_image %}
+                        <div style="flex-shrink: 0;">
+                          <img 
+                            src="{{ article.featured_image | img_url: '150x150' }}" 
+                            alt="{{ article.title }}"
+                            style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px;"
+                          >
+                        </div>
+                      {% endif %}
+                      
+                      <div style="flex: 1;">
+                        <h3 style="font-size: 1.3rem; font-weight: 600; margin-bottom: 0.5rem;">
+                          <a href="{{ article.url }}" style="color: var(--color-text); text-decoration: none;">
+                            {{ article.title }}
+                          </a>
+                        </h3>
+                        
+                        <div style="color: var(--color-text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+                          {{ article.published_at | date: '%d %B %Y' }} | بواسطة {{ article.author }}
+                        </div>
+                        
+                        {% if article.excerpt != blank %}
+                          <p style="color: var(--color-text-muted); line-height: 1.6; margin-bottom: 1rem;">
+                            {{ article.excerpt | truncate: 150 }}
+                          </p>
+                        {% else %}
+                          <p style="color: var(--color-text-muted); line-height: 1.6; margin-bottom: 1rem;">
+                            {{ article.content | strip_html | truncate: 150 }}
+                          </p>
+                        {% endif %}
+                        
+                        <a href="{{ article.url }}" style="color: var(--color-primary); text-decoration: none; font-weight: 500;">
+                          قراءة المقال →
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+        </div>
+
+      {% else %}
+        {% comment %} لا توجد نتائج {% endcomment %}
+        <div style="text-align: center; padding: 4rem 2rem; background: var(--color-surface); border-radius: var(--border-radius); margin: 2rem 0;">
+          <svg width="120" height="120" viewBox="0 0 24 24" fill="currentColor" style="color: var(--color-text-muted); margin-bottom: 2rem;">
+            <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+          </svg>
+          
+          <h2 style="color: var(--color-text); margin-bottom: 1rem; font-size: 1.8rem;">
+            لم يتم العثور على نتائج
+          </h2>
+          
+          <p style="color: var(--color-text-muted); margin-bottom: 2rem; font-size: 1.1rem;">
+            جرب استخدام كلمات مختلفة أو تحقق من الإملاء
+          </p>
+          
+          <div style="margin-bottom: 2rem;">
+            <h3 style="color: var(--color-text); margin-bottom: 1rem;">اقتراحات:</h3>
+            <ul style="list-style: none; color: var(--color-text-muted); line-height: 1.8;">
+              <li>• تأكد من كتابة الكلمات بشكل صحيح</li>
+              <li>• جرب كلمات أقل أو مختلفة</li>
+              <li>• استخدم مصطلحات أكثر عمومية</li>
+            </ul>
+          </div>
+          
+          <a href="/collections/all" class="s-button--primary" style="display: inline-block;">
+            تصفح جميع المنتجات
+          </a>
+        </div>
+      {% endif %}
+    {% else %}
+      
+      {% comment %} صفحة البحث الافتراضية {% endcomment %}
+      <div style="text-align: center; padding: 4rem 2rem;">
+        <svg width="150" height="150" viewBox="0 0 24 24" fill="currentColor" style="color: var(--color-text-muted); margin-bottom: 2rem;">
+          <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+        </svg>
+        
+        <h2 style="color: var(--color-text); margin-bottom: 1rem; font-size: 2rem;">
+          ابحث عن منتجاتك المفضلة
+        </h2>
+        
+        <p style="color: var(--color-text-muted); margin-bottom: 3rem; font-size: 1.1rem;">
+          استخدم شريط البحث أعلاه للعثور على ما تريد
+        </p>
+
+        {% comment %} اقتراحات البحث الشائعة {% endcomment %}
+        <div>
+          <h3 style="color: var(--color-text); margin-bottom: 1rem;">عمليات بحث شائعة:</h3>
+          <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 0.5rem;">
+            {% assign popular_searches = 'قمصان,أحذية,ساعات,هواتف,اكسسوارات' | split: ',' %}
+            {% for search_term in popular_searches %}
+              <a 
+                href="/search?q={{ search_term | url_encode }}" 
+                style="background: var(--color-surface); color: var(--color-primary); padding: 0.5rem 1rem; border: 1px solid var(--color-primary); border-radius: 20px; text-decoration: none; font-size: 0.9rem; transition: var(--transition-fast);"
+              >
+                {{ search_term }}
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  // تصفية النتائج
+  function filterResults(type) {
+    // تحديث أزرار التصفية
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.classList.remove('active');
+      btn.style.background = 'transparent';
+      btn.style.color = 'var(--color-primary)';
+    });
+    
+    const activeBtn = document.querySelector(`[data-filter="${type}"]`);
+    activeBtn.classList.add('active');
+    activeBtn.style.background = 'var(--color-primary)';
+    activeBtn.style.color = 'white';
+    
+    // إظهار/إخفاء النتائج
+    document.querySelectorAll('[data-type]').forEach(section => {
+      if (type === 'all' || section.dataset.type === type) {
+        section.style.display = 'block';
+      } else {
+        section.style.display = 'none';
+      }
+    });
+  }
+
+  // تحسين تفاعل البحث
+  document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.querySelector('input[name="q"]');
+    
+    if (searchInput) {
+      // تركيز تلقائي على حقل البحث
+      searchInput.focus();
+      
+      // اقتراحات البحث أثناء الكتابة (يمكن إضافة المزيد من التفاعل هنا)
+      searchInput.addEventListener('input', function() {
+        // يمكن إضافة منطق لعرض اقتراحات فورية
+      });
+    }
+
+    // تحسين تفاعل الأزرار الشائعة
+    document.querySelectorAll('a[href*="/search?q="]').forEach(link => {
+      link.addEventListener('mouseenter', function() {
+        this.style.background = 'var(--color-primary)';
+        this.style.color = 'white';
+      });
+      
+      link.addEventListener('mouseleave', function() {
+        this.style.background = 'var(--color-surface)';
+        this.style.color = 'var(--color-primary)';
+      });
+    });
+  });
+</script>
+
+<style>
+  /* تحسينات CSS لصفحة البحث */
+  .search-page input[type="search"]:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(90, 103, 216, 0.2);
+  }
+
+  .filter-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .search-products .product-card,
+  .search-pages > div > div,
+  .search-articles > div > div {
+    animation: slideUp 0.4s ease-out forwards;
+    opacity: 0;
+  }
+
+  .search-products .product-card:nth-child(1) { animation-delay: 0.1s; }
+  .search-products .product-card:nth-child(2) { animation-delay: 0.2s; }
+  .search-products .product-card:nth-child(3) { animation-delay: 0.3s; }
+  .search-products .product-card:nth-child(4) { animation-delay: 0.4s; }
+
+  .search-pages > div > div:hover,
+  .search-articles > div > div:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* تصميم متجاوب */
+  @media (max-width: 768px) {
+    .search-filters > div {
+      flex-direction: column;
+      align-items: stretch;
+      text-align: center;
+    }
+    
+    .search-filters > div > div {
+      justify-content: center;
+      margin-top: 1rem;
+    }
+
+    .search-header h1 {
+      font-size: 2rem;
+    }
+    
+    .search-articles .div {
+      flex-direction: column;
+    }
+  }
+
+  /* تحسين شكل النتائج */
+  .search-results h2 {
+    position: relative;
+  }
+
+  .search-results h2::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 50px;
+    height: 3px;
+    background: var(--color-secondary);
+    border-radius: 2px;
+  }
+</style>

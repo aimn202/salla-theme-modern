@@ -1,0 +1,357 @@
+{% comment %}
+  صفحة السلة - Cart Page
+  عرض منتجات السلة مع إمكانية التعديل والحذف
+{% endcomment %}
+
+<div class="cart-page" style="padding: 2rem 0; min-height: 60vh;">
+  <div class="container">
+    
+    {% comment %} رأس صفحة السلة {% endcomment %}
+    <div class="cart-header" style="text-align: center; margin-bottom: 3rem;">
+      <h1 style="font-size: 2.5rem; font-weight: bold; color: var(--color-text); margin-bottom: 1rem;">
+        سلة التسوق
+      </h1>
+      
+      {% if cart.item_count > 0 %}
+        <p style="color: var(--color-text-muted); font-size: 1.1rem;">
+          لديك {{ cart.item_count }} 
+          {% if cart.item_count == 1 %}منتج{% else %}منتج{% endif %} 
+          في السلة
+        </p>
+      {% endif %}
+    </div>
+
+    {% if cart.item_count > 0 %}
+      
+      {% comment %} محتويات السلة {% endcomment %}
+      <div class="cart-content" style="display: grid; grid-template-columns: 2fr 1fr; gap: 3rem; align-items: start;">
+        
+        {% comment %} قائمة المنتجات {% endcomment %}
+        <div class="cart-items">
+          <form action="/cart" method="post" novalidate>
+            
+            {% comment %} رأس الجدول {% endcomment %}
+            <div class="cart-items-header" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 1rem; padding: 1rem; background: var(--color-surface); border-radius: var(--border-radius); margin-bottom: 1rem; font-weight: 600; color: var(--color-text);">
+              <div>المنتج</div>
+              <div style="text-align: center;">السعر</div>
+              <div style="text-align: center;">الكمية</div>
+              <div style="text-align: center;">المجموع</div>
+              <div></div>
+            </div>
+
+            {% comment %} منتجات السلة {% endcomment %}
+            {% for item in cart.items %}
+              <div class="cart-item" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 1rem; padding: 1.5rem; background: var(--color-surface); border-radius: var(--border-radius); margin-bottom: 1rem; align-items: center; box-shadow: var(--shadow-sm);">
+                
+                {% comment %} معلومات المنتج {% endcomment %}
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                  {% if item.image %}
+                    <img 
+                      src="{{ item.image | img_url: '100x100' }}" 
+                      alt="{{ item.title }}"
+                      style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;"
+                    >
+                  {% endif %}
+                  
+                  <div>
+                    <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--color-text); margin-bottom: 0.5rem;">
+                      <a href="{{ item.product.url }}" style="color: inherit; text-decoration: none;">
+                        {{ item.product.title }}
+                      </a>
+                    </h3>
+                    
+                    {% unless item.product.has_only_default_variant %}
+                      <p style="color: var(--color-text-muted); font-size: 0.9rem; margin: 0;">
+                        {{ item.variant.title }}
+                      </p>
+                    {% endunless %}
+
+                    {% if item.sku != blank %}
+                      <p style="color: var(--color-text-muted); font-size: 0.8rem; margin: 0;">
+                        رقم المنتج: {{ item.sku }}
+                      </p>
+                    {% endif %}
+                  </div>
+                </div>
+
+                {% comment %} السعر {% endcomment %}
+                <div style="text-align: center;">
+                  {% if item.original_price != item.final_price %}
+                    <span style="color: var(--color-text-muted); text-decoration: line-through; font-size: 0.9rem; display: block;">
+                      {{ item.original_price | money_with_currency }}
+                    </span>
+                  {% endif %}
+                  <span style="color: var(--color-primary); font-weight: 600;">
+                    {{ item.final_price | money_with_currency }}
+                  </span>
+                </div>
+
+                {% comment %} الكمية {% endcomment %}
+                <div style="text-align: center;">
+                  <div style="display: inline-flex; align-items: center; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                    <button 
+                      type="button" 
+                      onclick="updateCartItem({{ item.index }}, {{ item.quantity | minus: 1 }})"
+                      style="background: var(--color-surface); border: none; padding: 0.5rem 0.75rem; cursor: pointer; color: var(--color-text);"
+                      {% if item.quantity <= 1 %}disabled{% endif %}
+                    >
+                      -
+                    </button>
+                    
+                    <input 
+                      type="number" 
+                      name="updates[]" 
+                      value="{{ item.quantity }}" 
+                      min="0"
+                      onchange="updateCartItem({{ item.index }}, this.value)"
+                      style="width: 60px; text-align: center; border: none; padding: 0.5rem; background: var(--color-surface);"
+                    >
+                    
+                    <button 
+                      type="button" 
+                      onclick="updateCartItem({{ item.index }}, {{ item.quantity | plus: 1 }})"
+                      style="background: var(--color-surface); border: none; padding: 0.5rem 0.75rem; cursor: pointer; color: var(--color-text);"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {% comment %} المجموع {% endcomment %}
+                <div style="text-align: center; font-weight: 600; color: var(--color-primary);">
+                  {{ item.final_line_price | money_with_currency }}
+                </div>
+
+                {% comment %} زر الحذف {% endcomment %}
+                <div>
+                  <button 
+                    type="button" 
+                    onclick="removeCartItem({{ item.index }})"
+                    style="background: none; border: none; color: var(--color-text-muted); cursor: pointer; padding: 0.5rem; border-radius: 4px; transition: var(--transition-fast);"
+                    title="حذف المنتج"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            {% endfor %}
+
+            {% comment %} أزرار الإجراءات {% endcomment %}
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+              <button type="submit" name="update" class="s-button--primary" style="background: var(--color-surface); color: var(--color-primary); border: 1px solid var(--color-primary);">
+                تحديث السلة
+              </button>
+              
+              <a href="/collections/all" style="color: var(--color-text-muted); text-decoration: none; padding: 0.75rem 1.5rem; border: 1px solid #ddd; border-radius: var(--border-radius); transition: var(--transition-fast);">
+                متابعة التسوق
+              </a>
+            </div>
+          </form>
+        </div>
+
+        {% comment %} ملخص الطلب {% endcomment %}
+        <div class="cart-summary">
+          <div style="background: var(--color-surface); padding: 2rem; border-radius: var(--border-radius); box-shadow: var(--shadow-md); position: sticky; top: 2rem;">
+            
+            <h3 style="font-size: 1.5rem; font-weight: bold; color: var(--color-text); margin-bottom: 1.5rem; text-align: center;">
+              ملخص الطلب
+            </h3>
+
+            {% comment %} تفاصيل الأسعار {% endcomment %}
+            <div style="border-bottom: 1px solid #eee; padding-bottom: 1rem; margin-bottom: 1rem;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <span style="color: var(--color-text);">المجموع الفرعي:</span>
+                <span style="color: var(--color-text); font-weight: 600;">{{ cart.total_price | money_with_currency }}</span>
+              </div>
+              
+              {% if cart.total_discounts > 0 %}
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; color: var(--color-secondary);">
+                  <span>الخصم:</span>
+                  <span>-{{ cart.total_discounts | money_with_currency }}</span>
+                </div>
+              {% endif %}
+
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; color: var(--color-text-muted); font-size: 0.9rem;">
+                <span>الشحن:</span>
+                <span>سيتم حسابه في الخطوة التالية</span>
+              </div>
+            </div>
+
+            {% comment %} المجموع النهائي {% endcomment %}
+            <div style="display: flex; justify-content: space-between; margin-bottom: 2rem; font-size: 1.3rem; font-weight: bold;">
+              <span style="color: var(--color-text);">المجموع:</span>
+              <span style="color: var(--color-primary);">{{ cart.total_price | money_with_currency }}</span>
+            </div>
+
+            {% comment %} تنبيه الشحن المجاني {% endcomment %}
+            {% assign free_shipping_threshold = settings.free_shipping_threshold | default: 200 | times: 100 %}
+            {% if cart.total_price < free_shipping_threshold %}
+              {% assign remaining = free_shipping_threshold | minus: cart.total_price %}
+              <div style="background: #fef3cd; border: 1px solid #fecaca; color: #92400e; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: center; font-size: 0.9rem;">
+                أضف {{ remaining | money_with_currency }} للحصول على شحن مجاني! 🚚
+              </div>
+            {% else %}
+              <div style="background: #d1fae5; border: 1px solid #a7f3d0; color: #047857; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: center; font-size: 0.9rem;">
+                تهانينا! تحصل على شحن مجاني 🎉
+              </div>
+            {% endif %}
+
+            {% comment %} زر إتمام الطلب {% endcomment %}
+            <button type="submit" name="add" form="cart-form" class="s-button--primary" style="width: 100%; padding: 1rem; font-size: 1.1rem; margin-bottom: 1rem;">
+              إتمام الطلب
+            </button>
+
+            {% comment %} طرق الدفع المتاحة {% endcomment %}
+            <div style="text-align: center; margin-top: 1rem;">
+              <p style="color: var(--color-text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">طرق الدفع المتاحة:</p>
+              <div style="display: flex; justify-content: center; gap: 0.5rem;">
+                <div style="width: 35px; height: 22px; background: #1434CB; border-radius: 3px; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.6rem; font-weight: bold;">VISA</div>
+                <div style="width: 35px; height: 22px; background: #EB001B; border-radius: 3px; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.6rem; font-weight: bold;">MC</div>
+                <div style="width: 35px; height: 22px; background: #0070BA; border-radius: 3px; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.5rem; font-weight: bold;">PayPal</div>
+                <div style="width: 35px; height: 22px; background: #00D632; border-radius: 3px; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.5rem; font-weight: bold;">mada</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    {% else %}
+      
+      {% comment %} السلة فارغة {% endcomment %}
+      <div style="text-align: center; padding: 4rem 2rem; background: var(--color-surface); border-radius: var(--border-radius); margin: 2rem 0;">
+        <svg width="120" height="120" viewBox="0 0 24 24" fill="currentColor" style="color: var(--color-text-muted); margin-bottom: 2rem;">
+          <path d="M7,18C8.1,18 9,18.9 9,20A2,2 0 0,1 7,22A2,2 0 0,1 5,20C5,18.9 5.9,18 7,18M1,2V4H3L6.6,11.59L5.24,14.04C5.09,14.32 5,14.65 5,15A2,2 0 0,0 7,17H19V15H7.42A0.25,0.25 0 0,1 7.17,14.75C7.17,14.7 7.18,14.66 7.2,14.63L8.1,13H15.55C16.3,13 16.96,12.58 17.3,11.97L20.88,5H5.21L4.27,3H1M17,18C18.1,18 19,18.9 19,20A2,2 0 0,1 17,22A2,2 0 0,1 15,20C15,18.9 15.9,18 17,18Z"/>
+        </svg>
+        
+        <h2 style="color: var(--color-text); margin-bottom: 1rem; font-size: 1.8rem;">
+          سلة التسوق فارغة
+        </h2>
+        
+        <p style="color: var(--color-text-muted); margin-bottom: 2rem; font-size: 1.1rem;">
+          لم تقم بإضافة أي منتجات إلى السلة بعد
+        </p>
+        
+        <a href="/collections/all" class="s-button--primary" style="display: inline-block;">
+          ابدأ التسوق الآن
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  // تحديث كمية المنتج
+  function updateCartItem(line, quantity) {
+    if (quantity < 0) quantity = 0;
+    
+    fetch('/cart/change.js', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        line: line,
+        quantity: quantity
+      })
+    })
+    .then(response => response.json())
+    .then(cart => {
+      window.location.reload();
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      showNotification('حدث خطأ أثناء تحديث السلة', 'error');
+    });
+  }
+
+  // حذف منتج من السلة
+  function removeCartItem(line) {
+    if (confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
+      updateCartItem(line, 0);
+    }
+  }
+
+  // تحديث عداد السلة في الهيدر
+  function updateCartCount() {
+    fetch('/cart.js')
+      .then(response => response.json())
+      .then(cart => {
+        const cartCount = document.querySelector('.s-header__cart-count');
+        if (cartCount) {
+          cartCount.textContent = cart.item_count;
+          cartCount.style.display = cart.item_count > 0 ? 'flex' : 'none';
+        }
+      });
+  }
+
+  // تحديث السلة عند تحميل الصفحة
+  document.addEventListener('DOMContentLoaded', function() {
+    updateCartCount();
+  });
+</script>
+
+<style>
+  /* تحسينات CSS لصفحة السلة */
+  .cart-item button:hover {
+    background: rgba(var(--color-primary), 0.1) !important;
+    color: var(--color-primary) !important;
+  }
+
+  .cart-item button[title]:hover {
+    background: rgba(239, 68, 68, 0.1) !important;
+    color: #ef4444 !important;
+  }
+
+  .cart-summary button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* تصميم متجاوب */
+  @media (max-width: 768px) {
+    .cart-content {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+    
+    .cart-items-header {
+      display: none;
+    }
+    
+    .cart-item {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      text-align: center;
+    }
+    
+    .cart-item > div:first-child {
+      flex-direction: column;
+      text-align: center;
+    }
+    
+    .cart-summary {
+      order: -1;
+    }
+
+    .cart-header h1 {
+      font-size: 2rem;
+    }
+  }
+
+  /* تحسين شكل الإدخالات */
+  .cart-item input[type="number"]:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(90, 103, 216, 0.2);
+  }
+
+  /* تأثيرات الحركة */
+  .cart-item {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  .cart-summary {
+    animation: slideUp 0.5s ease-out;
+  }
+</style>

@@ -1,0 +1,409 @@
+<!doctype html>
+<html class="no-js" lang="{{ request.locale.iso_code }}" dir="rtl">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    
+    {% comment %} العنوان والوصف {% endcomment %}
+    <title>
+      {{ page_title }}
+      {%- if current_tags %} &ndash; tagged "{{ current_tags | join: ', ' }}"{% endif -%}
+      {%- if current_page != 1 %} &ndash; Page {{ current_page }}{% endif -%}
+      {%- unless page_title contains shop.name %} &ndash; {{ shop.name }}{% endunless -%}
+    </title>
+
+    {% if page_description %}
+      <meta name="description" content="{{ page_description | escape }}">
+    {% endif %}
+
+    {% comment %} Canonical URL {% endcomment %}
+    <link rel="canonical" href="{{ canonical_url }}">
+
+    {% comment %} خطوط Google Fonts العربية {% endcomment %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;500;600;700;800;900&family=Tajawal:wght@200;300;400;500;700;800;900&display=swap" rel="stylesheet">
+
+    {% comment %} ملف CSS الرئيسي {% endcomment %}
+    {{ 'theme.css' | asset_url | stylesheet_tag }}
+
+    {% comment %} Meta Tags للشبكات الاجتماعية {% endcomment %}
+    <meta property="og:site_name" content="{{ shop.name }}">
+    <meta property="og:url" content="{{ canonical_url }}">
+    <meta property="og:title" content="{{ page_title | escape }}">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="{{ page_description | escape }}">
+
+    {% if page.featured_image %}
+      <meta property="og:image" content="http:{{ page.featured_image | img_url: '1200x630' }}">
+      <meta property="og:image:secure_url" content="https:{{ page.featured_image | img_url: '1200x630' }}">
+      <meta property="og:image:width" content="1200">
+      <meta property="og:image:height" content="630">
+    {% endif %}
+
+    {% comment %} Favicon {% endcomment %}
+    {% if settings.favicon != blank %}
+      <link rel="icon" type="image/png" href="{{ settings.favicon | img_url: '32x32' }}">
+    {% endif %}
+
+    {% comment %} JSON-LD للمتجر {% endcomment %}
+    <script type="application/ld+json">
+    {
+      "@context": "http://schema.org",
+      "@type": "WebSite",
+      "name": {{ shop.name | json }},
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "{{ routes.search_url }}?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      },
+      "url": {{ shop.url | append: page.url | json }}
+    }
+    </script>
+
+    {% comment %} JavaScript من Shopify {% endcomment %}
+    {{ content_for_header }}
+
+    {% comment %} متغيرات CSS من الإعدادات {% endcomment %}
+    <style>
+      :root {
+        --color-primary: {{ settings.color_primary | default: '#5a67d8' }};
+        --color-secondary: {{ settings.color_secondary | default: '#ff7e3e' }};
+        --color-text: {{ settings.color_text | default: '#2d3748' }};
+        --font-primary: {{ settings.font_primary | default: "'Cairo', sans-serif" }};
+      }
+      
+      {% comment %} إعدادات الخط المخصصة {% endcomment %}
+      {% if settings.font_primary %}
+        body, .s-header, .product-card, .s-button--primary {
+          font-family: {{ settings.font_primary }}, 'Cairo', 'Tajawal', sans-serif;
+        }
+      {% endif %}
+    </style>
+  </head>
+
+  <body class="template-{{ template | replace: '.', '-' | handle }}">
+    
+    {% comment %} تخطي للمحتوى الرئيسي - إمكانية الوصول {% endcomment %}
+    <a class="skip-to-content-link button visually-hidden" href="#MainContent">
+      {{ 'accessibility.skip_to_text' | t }}
+    </a>
+
+    {% comment %} رأس الصفحة {% endcomment %}
+    {% section 'header' %}
+
+    {% comment %} المحتوى الرئيسي {% endcomment %}
+    <main id="MainContent" class="content-for-layout focus-none" role="main" tabindex="-1">
+      {{ content_for_layout }}
+    </main>
+
+    {% comment %} ذيل الصفحة {% endcomment %}
+    {% section 'footer' %}
+
+    {% comment %} نافذة سلة التسوق المنبثقة {% endcomment %}
+    <div id="cart-drawer" class="cart-drawer" style="display: none;">
+      <div class="cart-drawer__overlay" onclick="closeCartDrawer()"></div>
+      <div class="cart-drawer__content">
+        <div class="cart-drawer__header">
+          <h3>سلة التسوق</h3>
+          <button onclick="closeCartDrawer()" class="cart-drawer__close">×</button>
+        </div>
+        <div class="cart-drawer__items" id="cart-items">
+          <!-- محتوى السلة سيتم تحميله بـ JavaScript -->
+        </div>
+        <div class="cart-drawer__footer">
+          <div class="cart-total" id="cart-total"></div>
+          <a href="/cart" class="s-button--primary" style="width: 100%; text-align: center; display: block; margin-top: 1rem;">
+            إتمام الطلب
+          </a>
+        </div>
+      </div>
+    </div>
+
+    {% comment %} JavaScript الأساسي {% endcomment %}
+    <script>
+      // إعدادات عامة
+      window.theme = {
+        routes: {
+          cart_add_url: '{{ routes.cart_add_url }}',
+          cart_change_url: '{{ routes.cart_change_url }}',
+          cart_update_url: '{{ routes.cart_update_url }}',
+          predictive_search_url: '{{ routes.predictive_search_url }}'
+        },
+        strings: {
+          add_to_cart: {{ 'products.product.add_to_cart' | t | json }},
+          sold_out: {{ 'products.product.sold_out' | t | json }},
+          unavailable: {{ 'products.product.unavailable' | t | json }}
+        },
+        moneyFormat: {{ shop.money_format | json }}
+      };
+
+      // إضافة كلاس للجسم عند تحميل الصفحة
+      document.addEventListener('DOMContentLoaded', function() {
+        document.body.classList.remove('no-js');
+        document.body.classList.add('js');
+
+        // تحديث عداد السلة عند تحميل الصفحة
+        updateCartCount();
+      });
+
+      // فتح سلة التسوق
+      function openCartDrawer() {
+        document.getElementById('cart-drawer').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        loadCartItems();
+      }
+
+      // إغلاق سلة التسوق
+      function closeCartDrawer() {
+        document.getElementById('cart-drawer').style.display = 'none';
+        document.body.style.overflow = 'auto';
+      }
+
+      // تحميل محتويات السلة
+      function loadCartItems() {
+        fetch('/cart.js')
+          .then(response => response.json())
+          .then(cart => {
+            const cartItemsContainer = document.getElementById('cart-items');
+            const cartTotalContainer = document.getElementById('cart-total');
+            
+            if (cart.items.length === 0) {
+              cartItemsContainer.innerHTML = '<p style="text-align: center; padding: 2rem; color: var(--color-text-muted);">سلة التسوق فارغة</p>';
+              cartTotalContainer.innerHTML = '';
+              return;
+            }
+
+            let itemsHTML = '';
+            cart.items.forEach(item => {
+              itemsHTML += `
+                <div class="cart-item" style="display: flex; gap: 1rem; padding: 1rem; border-bottom: 1px solid #eee;">
+                  <img src="${item.featured_image?.url || ''}" alt="${item.product_title}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+                  <div style="flex: 1;">
+                    <h4 style="margin: 0 0 0.5rem; font-size: 0.9rem;">${item.product_title}</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                      <span style="color: var(--color-primary); font-weight: bold;">${formatMoney(item.final_price)}</span>
+                      <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <button onclick="changeCartItemQuantity(${item.key}, ${item.quantity - 1})" style="background: none; border: 1px solid #ddd; width: 25px; height: 25px; border-radius: 4px;">-</button>
+                        <span>${item.quantity}</span>
+                        <button onclick="changeCartItemQuantity(${item.key}, ${item.quantity + 1})" style="background: none; border: 1px solid #ddd; width: 25px; height: 25px; border-radius: 4px;">+</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              `;
+            });
+
+            cartItemsContainer.innerHTML = itemsHTML;
+            cartTotalContainer.innerHTML = `
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 1.2rem; font-weight: bold; padding: 1rem 0;">
+                <span>المجموع:</span>
+                <span style="color: var(--color-primary);">${formatMoney(cart.total_price)}</span>
+              </div>
+            `;
+          });
+      }
+
+      // تغيير كمية منتج في السلة
+      function changeCartItemQuantity(key, quantity) {
+        if (quantity <= 0) {
+          quantity = 0;
+        }
+
+        fetch('/cart/change.js', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: key,
+            quantity: quantity
+          })
+        })
+        .then(response => response.json())
+        .then(cart => {
+          loadCartItems();
+          updateCartCount();
+        });
+      }
+
+      // تحديث عداد السلة
+      function updateCartCount() {
+        fetch('/cart.js')
+          .then(response => response.json())
+          .then(cart => {
+            const cartCount = document.querySelector('.s-header__cart-count');
+            if (cartCount) {
+              cartCount.textContent = cart.item_count;
+              cartCount.style.display = cart.item_count > 0 ? 'flex' : 'none';
+            }
+          });
+      }
+
+      // تنسيق السعر
+      function formatMoney(cents) {
+        const money = (cents / 100).toFixed(2);
+        return money.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' ر.س';
+      }
+
+      // ربط زر السلة بالهيدر
+      document.addEventListener('DOMContentLoaded', function() {
+        const cartBtn = document.querySelector('.s-header__cart-btn');
+        if (cartBtn) {
+          cartBtn.addEventListener('click', openCartDrawer);
+        }
+      });
+    </script>
+
+    {% comment %} CSS للنافذة المنبثقة للسلة {% endcomment %}
+    <style>
+      .cart-drawer {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 9999;
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      .cart-drawer__overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        cursor: pointer;
+      }
+
+      .cart-drawer__content {
+        width: 400px;
+        max-width: 90vw;
+        height: 100%;
+        background: var(--color-surface);
+        box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        z-index: 1;
+      }
+
+      .cart-drawer__header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .cart-drawer__header h3 {
+        margin: 0;
+        font-size: 1.3rem;
+        color: var(--color-text);
+      }
+
+      .cart-drawer__close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--color-text);
+        padding: 0.5rem;
+        border-radius: 4px;
+        transition: var(--transition-fast);
+      }
+
+      .cart-drawer__close:hover {
+        background: rgba(0, 0, 0, 0.1);
+      }
+
+      .cart-drawer__items {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0;
+      }
+
+      .cart-drawer__footer {
+        padding: 1.5rem;
+        border-top: 1px solid #eee;
+      }
+
+      .skip-to-content-link {
+        position: absolute;
+        top: -100px;
+        left: 20px;
+        z-index: 1000;
+        background: var(--color-primary);
+        color: white;
+        padding: 0.5rem 1rem;
+        text-decoration: none;
+        border-radius: 4px;
+        transition: top 0.3s;
+      }
+
+      .skip-to-content-link:focus {
+        top: 20px;
+      }
+
+      .visually-hidden {
+        position: absolute !important;
+        overflow: hidden;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        padding: 0;
+        border: 0;
+        clip: rect(0 0 0 0);
+        word-wrap: normal !important;
+      }
+
+      /* إزالة كلاس no-js */
+      .no-js .js-only {
+        display: none;
+      }
+    </style>
+
+    {% comment %} Analytics و Scripts إضافية {% endcomment %}
+    {% if template == 'product' %}
+      <script type="application/ld+json">
+      {
+        "@context": "http://schema.org/",
+        "@type": "Product",
+        "name": {{ product.title | json }},
+        "url": {{ shop.url | append: product.url | json }},
+        {% if product.featured_image %}
+          "image": [
+            {{ product.featured_image | img_url: '600x600' | prepend: 'https:' | json }}
+          ],
+        {% endif %}
+        "description": {{ product.description | strip_html | json }},
+        {% if product.selected_or_first_available_variant.sku != blank %}
+          "sku": {{ product.selected_or_first_available_variant.sku | json }},
+        {% endif %}
+        "brand": {
+          "@type": "Thing",
+          "name": {{ product.vendor | json }}
+        },
+        "offers": [
+          {%- for variant in product.variants -%}
+            {
+              "@type" : "Offer",
+              {%- if variant.sku != blank -%}
+                "sku": {{ variant.sku | json }},
+              {%- endif -%}
+              "availability" : "http://schema.org/{% if variant.available %}InStock{% else %}OutOfStock{% endif %}",
+              "price" : {{ variant.price | divided_by: 100.00 | json }},
+              "priceCurrency" : {{ cart.currency.iso_code | json }},
+              "url" : {{ shop.url | append: variant.url | json }}
+            }{% unless forloop.last %},{% endunless %}
+          {%- endfor -%}
+        ]
+      }
+      </script>
+    {% endif %}
+
+  </body>
+</html>

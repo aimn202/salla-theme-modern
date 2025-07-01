@@ -1,0 +1,372 @@
+[
+  {
+    "name": "theme_info",
+    "theme_name": "Ayman Salla Theme",
+    "theme_version": "1.0.0",
+    "theme_author": "Ayman GPT-4",
+    "theme_documentation_url": "",
+    "theme_support_url": ""
+  },
+  {
+    "name": "الألوان",
+    "settings": [
+      {
+        "type": "header",
+        "content": "ألوان القالب الأساسية"
+      },
+      {
+        "type": "color",
+        "id": "color_primary",
+        "label": "اللون الأساسي",
+        "default": "#5a67d8",
+        "info": "يستخدم للأزرار والروابط والعناصر المهمة"
+      },
+      {
+        "type": "color",
+        "id": "color_secondary",
+        "label": "اللون الثانوي",
+        "default": "#ff7e3e",
+        "info": "يستخدم للعروض والتنبيهات والتدرجات"
+      },
+      {
+        "type": "color",
+        "id": "color_text",
+        "label": "لون النص الأساسي",
+        "default": "#2d3748",
+        "info": "لون النص الرئيسي في الموقع"
+      },
+      {
+        "type": "color",
+        "id": "color_bg",
+        "label": "لون خلفية الصفحة",
+        "default": "#f7f8fc",
+        "info": "لون الخلفية العامة للموقع"
+      },
+      {
+        "type": "color",
+        "id": "color_surface",
+        "label": "لون الأسطح",
+        "default": "#ffffff",
+        "info": "لون خلفية البطاقات والهيدر والفوتر"
+      }
+    ]
+  },
+  {
+    "name": "الخطوط والنصوص",
+    "settings": [
+      {
+        "type": "header",
+        "content": "إعدادات الخطوط"
+      },
+      {
+        "type": "font_picker",
+        "id": "font_primary",
+        "label": "الخط الأساسي",
+        "default": "cairo",
+        "info": "الخط المستخدم في جميع أنحاء الموقع"
+      },
+      {
+        "type": "range",
+        "id": "font_size_base",
+        "min": 14,
+        "max": 20,
+        "step": 1,
+        "unit": "px",
+        "label": "حجم الخط الأساسي",
+        "default": 16,
+        "info": "حجم النص الأساسي في الموقع"
+      }
+    ]
+  },
+  {
+    "name": "الصفحة الرئيسية",
+    "settings": [
+      {
+        "type": "header",
+        "content": "البانر الرئيسي"
+      },
+      {
+        "type": "text",
+        "id": "hero_title",
+        "label": "عنوان البانر",
+        "default": "مرحباً بك في متجرنا المميز",
+        "info": "العنوان الرئيسي الذي يظهر في البانر"
+      },
+      {
+        "type": "textarea",
+        "id": "hero_description",
+        "label": "وصف البانر",
+        "default": "اكتشف مجموعة رائعة من المنتجات عالية الجودة بأفضل الأسعار",
+        "info": "النص الوصفي أسفل العنوان"
+      },
+      {
+        "type": "image_picker",
+        "id": "hero_image",
+        "label": "صورة البانر (اختياري)",
+        "info": "صورة خلفية للبانر الرئيسي"
+      },
+      {
+        "type": "header",
+        "content": "المنتجات المميزة"
+      },
+      {
+        "type": "collection",
+        "id": "featured_collection",
+        "label": "المجموعة المميزة",
+        "info": "اختر المجموعة التي تريد عرضها في الصفحة الرئيسية"
+      },
+      {
+        "type": "range",
+        "id": "featured_products_count",
+        "min": 4,
+        "max": 12,
+        "step": 4,
+        "label": "عدد المنتجات المعروضة",
+        "default": 8,
+        "info": "كم منتج تريد عرضه في القسم المميز"
+      }
+    ]
+  },
+  {
+    "name": "الهيدر",
+    "settings": [
+      {
+        "type": "header",
+        "content": "شعار المتجر"
+      },
+      {
+        "type": "image_picker",
+        "id": "logo",
+        "label": "شعار المتجر",
+        "info": "اختر صورة شعار المتجر"
+      },
+      {
+        "type": "range",
+        "id": "logo_width",
+        "min": 50,
+        "max": 300,
+        "step": 10,
+        "unit": "px",
+        "label": "عرض الشعار",
+        "default": 150,
+        "info": "عرض الشعار بالبكسل"
+      },
+      {
+        "type": "header",
+        "content": "قائمة التنقل"
+      },
+      {
+        "type": "link_list",
+        "id": "main_menu",
+        "label": "القائمة الرئيسية",
+        "default": "main-menu",
+        "info": "اختر القائمة التي ستظهر في الهيدر"
+      },
+      {
+        "type": "checkbox",
+        "id": "show_search",
+        "label": "إظهار زر البحث",
+        "default": true
+      },
+      {
+        "type": "checkbox",
+        "id": "show_cart",
+        "label": "إظهار أيقونة السلة",
+        "default": true
+      }
+    ]
+  },
+  {
+    "name": "الفوتر",
+    "settings": [
+      {
+        "type": "header",
+        "content": "معلومات المتجر"
+      },
+      {
+        "type": "textarea",
+        "id": "footer_description",
+        "label": "وصف المتجر",
+        "default": "متجر إلكتروني متخصص في تقديم أفضل المنتجات بجودة عالية وأسعار مناسبة.",
+        "info": "وصف مختصر للمتجر يظهر في الفوتر"
+      },
+      {
+        "type": "header",
+        "content": "معلومات الاتصال"
+      },
+      {
+        "type": "text",
+        "id": "contact_email",
+        "label": "البريد الإلكتروني",
+        "info": "البريد الإلكتروني للتواصل"
+      },
+      {
+        "type": "text",
+        "id": "contact_phone",
+        "label": "رقم الهاتف",
+        "info": "رقم الهاتف للتواصل"
+      },
+      {
+        "type": "textarea",
+        "id": "contact_address",
+        "label": "العنوان",
+        "info": "عنوان المتجر أو المكتب"
+      },
+      {
+        "type": "header",
+        "content": "وسائل التواصل الاجتماعي"
+      },
+      {
+        "type": "url",
+        "id": "social_twitter_link",
+        "label": "رابط تويتر",
+        "info": "رابط حساب تويتر"
+      },
+      {
+        "type": "url",
+        "id": "social_facebook_link",
+        "label": "رابط فيسبوك",
+        "info": "رابط صفحة فيسبوك"
+      },
+      {
+        "type": "url",
+        "id": "social_instagram_link",
+        "label": "رابط إنستغرام",
+        "info": "رابط حساب إنستغرام"
+      },
+      {
+        "type": "url",
+        "id": "social_youtube_link",
+        "label": "رابط يوتيوب",
+        "info": "رابط قناة يوتيوب"
+      },
+      {
+        "type": "url",
+        "id": "social_linkedin_link",
+        "label": "رابط لينكدإن",
+        "info": "رابط صفحة لينكدإن"
+      }
+    ]
+  },
+  {
+    "name": "صفحة المنتج",
+    "settings": [
+      {
+        "type": "header",
+        "content": "إعدادات عرض المنتج"
+      },
+      {
+        "type": "checkbox",
+        "id": "product_show_vendor",
+        "label": "إظهار اسم الماركة",
+        "default": true,
+        "info": "إظهار اسم الماركة أو المورد"
+      },
+      {
+        "type": "checkbox",
+        "id": "product_show_sku",
+        "label": "إظهار رقم المنتج (SKU)",
+        "default": false,
+        "info": "إظهار رقم المنتج التعريفي"
+      },
+      {
+        "type": "checkbox",
+        "id": "product_show_share_buttons",
+        "label": "إظهار أزرار المشاركة",
+        "default": true,
+        "info": "إظهار أزرار مشاركة المنتج على وسائل التواصل"
+      },
+      {
+        "type": "select",
+        "id": "product_image_size",
+        "label": "حجم صور المنتج",
+        "options": [
+          { "value": "small", "label": "صغير" },
+          { "value": "medium", "label": "متوسط" },
+          { "value": "large", "label": "كبير" }
+        ],
+        "default": "medium",
+        "info": "حجم عرض صور المنتج"
+      }
+    ]
+  },
+  {
+    "name": "السلة والدفع",
+    "settings": [
+      {
+        "type": "header",
+        "content": "إعدادات السلة"
+      },
+      {
+        "type": "select",
+        "id": "cart_type",
+        "label": "نوع السلة",
+        "options": [
+          { "value": "drawer", "label": "منبثقة جانبية" },
+          { "value": "page", "label": "صفحة منفصلة" }
+        ],
+        "default": "drawer",
+        "info": "كيف تريد عرض سلة التسوق"
+      },
+      {
+        "type": "checkbox",
+        "id": "cart_show_notes",
+        "label": "إظهار حقل الملاحظات",
+        "default": true,
+        "info": "السماح للعملاء بإضافة ملاحظات للطلب"
+      },
+      {
+        "type": "text",
+        "id": "free_shipping_threshold",
+        "label": "حد الشحن المجاني",
+        "default": "200",
+        "info": "المبلغ المطلوب للحصول على شحن مجاني"
+      }
+    ]
+  },
+  {
+    "name": "الإعدادات المتقدمة",
+    "settings": [
+      {
+        "type": "header",
+        "content": "الأداء والتحسين"
+      },
+      {
+        "type": "checkbox",
+        "id": "enable_animations",
+        "label": "تفعيل الحركات والانتقالات",
+        "default": true,
+        "info": "تفعيل أو إلغاء حركات العناصر والانتقالات"
+      },
+      {
+        "type": "checkbox",
+        "id": "lazy_load_images",
+        "label": "تحميل الصور بشكل تدريجي",
+        "default": true,
+        "info": "تحسين سرعة التحميل بتحميل الصور عند الحاجة"
+      },
+      {
+        "type": "header",
+        "content": "أكواد مخصصة"
+      },
+      {
+        "type": "html",
+        "id": "custom_css",
+        "label": "CSS مخصص",
+        "info": "أضف أكواد CSS مخصصة هنا"
+      },
+      {
+        "type": "html",
+        "id": "custom_js",
+        "label": "JavaScript مخصص",
+        "info": "أضف أكواد JavaScript مخصصة هنا"
+      },
+      {
+        "type": "textarea",
+        "id": "google_analytics",
+        "label": "كود Google Analytics",
+        "info": "ضع كود تتبع Google Analytics هنا"
+      }
+    ]
+  }
+]
