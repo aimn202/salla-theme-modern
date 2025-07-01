@@ -1,0 +1,63 @@
+{
+  "name": "ayman-salla-theme",
+  "version": "1.0.0",
+  "description": "قالب Shopify احترافي بتصميم عربي حديث مع دعم الوضع الليلي والنهاري التلقائي",
+  "main": "layout/theme.liquid",
+  "scripts": {
+    "dev": "echo 'Development server for theme preview'",
+    "build": "echo 'Building theme for production'",
+    "deploy": "echo 'Deploying theme to Shopify'",
+    "zip": "zip -r ayman-salla-theme.zip . -x '*.git*' 'node_modules/*' 'package*.json' 'README.md'"
+  },
+  "keywords": [
+    "shopify",
+    "theme",
+    "ecommerce",
+    "arabic",
+    "rtl",
+    "dark-mode",
+    "glassmorphism",
+    "modern",
+    "responsive"
+  ],
+  "author": {
+    "name": "Ayman1.sa",
+    "email": "ayman@example.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/username/ayman-salla-theme.git"
+  },
+  "bugs": {
+    "url": "https://github.com/username/ayman-salla-theme/issues"
+  },
+  "homepage": "https://github.com/username/ayman-salla-theme#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "devDependencies": {},
+  "dependencies": {},
+  "theme": {
+    "name": "Ayman Salla Theme",
+    "version": "1.0.0",
+    "author": "Ayman1.sa",
+    "shopify_theme_version": "2.0",
+    "features": [
+      "Automatic Dark & Light Mode",
+      "Glassmorphism Effects",
+      "RTL Support",
+      "Responsive Design",
+      "Product Cards Animation",
+      "Advanced CSS Variables",
+      "SEO Optimized",
+      "Performance Optimized"
+    ],
+    "supported_browsers": [
+      "Chrome >= 80",
+      "Firefox >= 75",
+      "Safari >= 13",
+      "Edge >= 80"
+    ]
+  }
+}

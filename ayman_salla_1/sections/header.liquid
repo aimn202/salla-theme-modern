@@ -1,0 +1,198 @@
+{% comment %}
+  Header Section - رأس الصفحة
+  يحتوي على تأثير الزجاج (Glassmorphism) والتصميم المتجاوب
+{% endcomment %}
+
+<header class="s-header">
+  <div class="s-header__container">
+    
+    {% comment %} شعار المتجر {% endcomment %}
+    <div class="s-header__logo">
+      <a href="/" class="s-header__logo-link">
+        {% if settings.logo != blank %}
+          <img src="{{ settings.logo | img_url: '200x' }}" alt="{{ shop.name }}" style="max-height: 50px;">
+        {% else %}
+          {{ shop.name }}
+        {% endif %}
+      </a>
+    </div>
+
+    {% comment %} قائمة التنقل الرئيسية {% endcomment %}
+    <nav class="s-header__navigation" role="navigation">
+      <ul class="s-header__nav">
+        <li class="s-header__nav-item">
+          <a href="/" class="s-header__nav-link">الرئيسية</a>
+        </li>
+        
+        {% comment %} عرض الفئات الرئيسية {% endcomment %}
+        {% for link in linklists.main-menu.links limit: 5 %}
+          <li class="s-header__nav-item">
+            <a href="{{ link.url }}" class="s-header__nav-link">{{ link.title }}</a>
+          </li>
+        {% endfor %}
+        
+        <li class="s-header__nav-item">
+          <a href="/pages/about" class="s-header__nav-link">عن المتجر</a>
+        </li>
+        <li class="s-header__nav-item">
+          <a href="/pages/contact" class="s-header__nav-link">تواصل معنا</a>
+        </li>
+      </ul>
+    </nav>
+
+    {% comment %} أدوات وأيقونات الهيدر {% endcomment %}
+    <div class="s-header__actions">
+      
+      {% comment %} زر البحث {% endcomment %}
+      <button class="s-header__search-btn" type="button" aria-label="البحث" onclick="toggleSearch()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+        </svg>
+      </button>
+
+      {% comment %} أيقونة المفضلة {% endcomment %}
+      <a href="/pages/wishlist" class="s-header__wishlist-btn" aria-label="المفضلة">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5 2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.04L12,21.35Z"/>
+        </svg>
+      </a>
+
+      {% comment %} أيقونة السلة مع عداد المنتجات {% endcomment %}
+      <button class="s-header__cart-btn" type="button" aria-label="سلة التسوق" onclick="openCart()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M7,18C8.1,18 9,18.9 9,20A2,2 0 0,1 7,22A2,2 0 0,1 5,20C5,18.9 5.9,18 7,18M1,2V4H3L6.6,11.59L5.24,14.04C5.09,14.32 5,14.65 5,15A2,2 0 0,0 7,17H19V15H7.42A0.25,0.25 0 0,1 7.17,14.75C7.17,14.7 7.18,14.66 7.2,14.63L8.1,13H15.55C16.3,13 16.96,12.58 17.3,11.97L20.88,5H5.21L4.27,3H1M17,18C18.1,18 19,18.9 19,20A2,2 0 0,1 17,22A2,2 0 0,1 15,20C15,18.9 15.9,18 17,18Z"/>
+        </svg>
+        {% if cart.item_count > 0 %}
+          <span class="s-header__cart-count">{{ cart.item_count }}</span>
+        {% endif %}
+      </button>
+
+      {% comment %} زر تسجيل الدخول / حساب المستخدم {% endcomment %}
+      {% if customer %}
+        <a href="/account" class="s-header__account-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
+          </svg>
+          <span>{{ customer.first_name }}</span>
+        </a>
+      {% else %}
+        <a href="/account/login" class="s-header__login-btn">
+          تسجيل الدخول
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  {% comment %} شريط البحث المخفي {% endcomment %}
+  <div class="s-header__search-bar" id="searchBar" style="display: none; padding: 1rem 0; background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur));">
+    <div class="s-header__container">
+      <form action="/search" method="get" style="display: flex; gap: 1rem; align-items: center;">
+        <input 
+          type="search" 
+          name="q" 
+          placeholder="ابحث عن المنتجات..." 
+          class="form-input" 
+          style="flex: 1; margin: 0;"
+          value="{{ search.terms | escape }}"
+        >
+        <button type="submit" class="s-button--primary">بحث</button>
+        <button type="button" onclick="toggleSearch()" style="background: none; border: none; color: var(--color-text); font-size: 1.2rem;">×</button>
+      </form>
+    </div>
+  </div>
+</header>
+
+{% comment %} JavaScript للتفاعل {% endcomment %}
+<script>
+  function toggleSearch() {
+    const searchBar = document.getElementById('searchBar');
+    if (searchBar.style.display === 'none' || searchBar.style.display === '') {
+      searchBar.style.display = 'block';
+      searchBar.querySelector('input').focus();
+    } else {
+      searchBar.style.display = 'none';
+    }
+  }
+
+  function openCart() {
+    // يمكن ربطه مع سلة Shopify أو نافذة منبثقة
+    window.location.href = '/cart';
+  }
+
+  // إضافة تأثير التمرير للهيدر
+  window.addEventListener('scroll', function() {
+    const header = document.querySelector('.s-header');
+    if (window.scrollY > 100) {
+      header.style.background = 'rgba(255, 255, 255, 0.85)';
+      header.style.backdropFilter = 'blur(15px)';
+    } else {
+      header.style.background = 'var(--glass-bg)';
+      header.style.backdropFilter = 'blur(var(--glass-blur))';
+    }
+  });
+</script>
+
+<style>
+  /* تحسينات إضافية خاصة بالهيدر */
+  .s-header__logo-link {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .s-header__logo-link:hover {
+    text-decoration: none;
+  }
+
+  .s-header__account-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-text);
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: var(--transition-fast);
+  }
+
+  .s-header__account-btn:hover {
+    background-color: rgba(90, 103, 216, 0.1);
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .s-header__wishlist-btn {
+    background: none;
+    border: none;
+    color: var(--color-text);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: var(--transition-fast);
+  }
+
+  .s-header__wishlist-btn:hover {
+    color: var(--color-primary);
+    background-color: rgba(90, 103, 216, 0.1);
+    text-decoration: none;
+  }
+
+  /* تصميم متجاوب للهيدر */
+  @media (max-width: 768px) {
+    .s-header__navigation {
+      display: none;
+    }
+    
+    .s-header__container {
+      flex-wrap: wrap;
+    }
+    
+    .s-header__actions {
+      gap: 0.5rem;
+    }
+    
+    .s-header__actions span {
+      display: none;
+    }
+  }
+</style>

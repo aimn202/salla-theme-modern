@@ -1,0 +1,316 @@
+{% comment %}
+  صفحة المنتج - Product Page
+  عرض تفاصيل المنتج مع صور وخيارات والإضافة للسلة
+{% endcomment %}
+
+<div class="product-page" style="padding: 2rem 0;">
+  <div class="container">
+    <div class="product-layout" style="display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start;">
+      
+      {% comment %} معرض صور المنتج {% endcomment %}
+      <div class="product-media">
+        <div class="product-images">
+          {% if product.images.size > 0 %}
+            <div class="product-image-main" style="margin-bottom: 1rem;">
+              <img 
+                id="main-product-image"
+                src="{{ product.featured_image | img_url: '600x600' }}" 
+                alt="{{ product.featured_image.alt | default: product.title }}"
+                style="width: 100%; border-radius: var(--border-radius); box-shadow: var(--shadow-md);"
+              >
+            </div>
+            
+            {% if product.images.size > 1 %}
+              <div class="product-thumbnails" style="display: flex; gap: 0.5rem; overflow-x: auto;">
+                {% for image in product.images limit: 5 %}
+                  <img 
+                    src="{{ image | img_url: '100x100' }}" 
+                    alt="{{ image.alt }}"
+                    class="product-thumbnail"
+                    style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: var(--transition-fast);"
+                    onclick="changeMainImage('{{ image | img_url: '600x600' }}')"
+                  >
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% else %}
+            <div style="width: 100%; height: 400px; background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%); border-radius: var(--border-radius); display: flex; align-items: center; justify-content: center; color: #999;">
+              <svg width="100" height="100" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19M19,19H5V5H19M13.96,12.29L11.21,15.83L9.25,13.47L6.5,17H17.5L13.96,12.29Z"/>
+              </svg>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      {% comment %} معلومات المنتج {% endcomment %}
+      <div class="product-info">
+        
+        {% comment %} عنوان المنتج {% endcomment %}
+        <h1 style="font-size: 2rem; font-weight: bold; color: var(--color-text); margin-bottom: 1rem; line-height: 1.3;">
+          {{ product.title }}
+        </h1>
+
+        {% comment %} اسم الماركة {% endcomment %}
+        {% if product.vendor and settings.product_show_vendor %}
+          <div style="color: var(--color-text-muted); font-size: 1rem; margin-bottom: 1rem;">
+            <strong>الماركة:</strong> {{ product.vendor }}
+          </div>
+        {% endif %}
+
+        {% comment %} السعر {% endcomment %}
+        <div class="product-price" style="margin-bottom: 2rem;">
+          {% if product.compare_at_price > product.price %}
+            <span style="color: var(--color-text-muted); text-decoration: line-through; font-size: 1.2rem; margin-left: 1rem;">
+              {{ product.compare_at_price | money_with_currency }}
+            </span>
+            {% assign discount_percentage = product.compare_at_price | minus: product.price | times: 100 | divided_by: product.compare_at_price %}
+            <span style="background: var(--color-secondary); color: white; padding: 0.3rem 0.6rem; border-radius: 6px; font-size: 0.9rem; margin-left: 1rem;">
+              وفر {{ discount_percentage }}%
+            </span>
+          {% endif %}
+          <div style="font-size: 2rem; font-weight: bold; color: var(--color-primary); margin-top: 0.5rem;">
+            {% if product.price_varies %}
+              من {{ product.price_min | money_with_currency }}
+            {% else %}
+              {{ product.price | money_with_currency }}
+            {% endif %}
+          </div>
+        </div>
+
+        {% comment %} وصف المنتج {% endcomment %}
+        {% if product.description != blank %}
+          <div class="product-description" style="color: var(--color-text); line-height: 1.6; margin-bottom: 2rem;">
+            {{ product.description }}
+          </div>
+        {% endif %}
+
+        {% comment %} نموذج الإضافة للسلة {% endcomment %}
+        <form action="/cart/add" method="post" enctype="multipart/form-data" id="product-form">
+          {% unless product.has_only_default_variant %}
+            {% for option in product.options_with_values %}
+              <div class="product-option" style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--color-text);">
+                  {{ option.name }}:
+                </label>
+                <select 
+                  name="id" 
+                  class="product-variant-select form-input"
+                  style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; background: var(--color-surface);"
+                >
+                  {% for variant in product.variants %}
+                    <option 
+                      value="{{ variant.id }}" 
+                      {% unless variant.available %}disabled{% endunless %}
+                      data-price="{{ variant.price }}"
+                    >
+                      {{ variant.title }}
+                      {% unless variant.available %} - نفد المخزون{% endunless %}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+            {% endfor %}
+          {% else %}
+            <input type="hidden" name="id" value="{{ product.variants.first.id }}">
+          {% endunless %}
+
+          {% comment %} اختيار الكمية {% endcomment %}
+          <div class="quantity-selector" style="margin-bottom: 2rem;">
+            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--color-text);">
+              الكمية:
+            </label>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <div style="display: flex; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                <button type="button" onclick="changeQuantity(-1)" style="background: var(--color-surface); border: none; padding: 0.75rem 1rem; cursor: pointer; color: var(--color-text);">-</button>
+                <input 
+                  type="number" 
+                  name="quantity" 
+                  value="1" 
+                  min="1" 
+                  id="quantity-input"
+                  style="width: 80px; text-align: center; border: none; padding: 0.75rem; background: var(--color-surface);"
+                >
+                <button type="button" onclick="changeQuantity(1)" style="background: var(--color-surface); border: none; padding: 0.75rem 1rem; cursor: pointer; color: var(--color-text);">+</button>
+              </div>
+            </div>
+          </div>
+
+          {% comment %} أزرار الإجراءات {% endcomment %}
+          <div class="product-actions" style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+            {% if product.available %}
+              <button type="submit" class="s-button--primary" style="flex: 1; padding: 1rem; font-size: 1.1rem;">
+                أضف إلى السلة
+              </button>
+            {% else %}
+              <button type="button" disabled class="s-button--primary" style="flex: 1; padding: 1rem; font-size: 1.1rem; opacity: 0.5;">
+                نفد المخزون
+              </button>
+            {% endif %}
+            
+            <button type="button" onclick="addToWishlist({{ product.id }})" style="background: var(--color-surface); border: 1px solid var(--color-primary); color: var(--color-primary); padding: 1rem; border-radius: var(--border-radius); cursor: pointer; transition: var(--transition-fast);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5 2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.04L12,21.35Z"/>
+              </svg>
+            </button>
+          </div>
+        </form>
+
+        {% comment %} معلومات إضافية {% endcomment %}
+        <div class="product-extras">
+          {% if settings.product_show_sku and product.selected_or_first_available_variant.sku != blank %}
+            <div style="color: var(--color-text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">
+              <strong>رقم المنتج:</strong> {{ product.selected_or_first_available_variant.sku }}
+            </div>
+          {% endif %}
+
+          <div style="color: var(--color-text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">
+            <strong>التصنيف:</strong> 
+            {% for collection in product.collections limit: 3 %}
+              <a href="{{ collection.url }}" style="color: var(--color-primary); text-decoration: none;">{{ collection.title }}</a>
+              {% unless forloop.last %}, {% endunless %}
+            {% endfor %}
+          </div>
+
+          {% comment %} أزرار المشاركة {% endcomment %}
+          {% if settings.product_show_share_buttons %}
+            <div style="margin-top: 2rem;">
+              <h4 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem; color: var(--color-text);">
+                شارك المنتج:
+              </h4>
+              <div style="display: flex; gap: 1rem;">
+                <a href="https://www.facebook.com/sharer/sharer.php?u={{ shop.url }}{{ product.url }}" target="_blank" style="color: #1877F2; font-size: 1.5rem;">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M24,12.073C24,5.405 18.627,0 12,0S0,5.405 0,12.073C0,18.1 4.388,23.094 10.125,24V15.563H7.078V12.073H10.125V9.404C10.125,6.369 11.917,4.715 14.658,4.715C15.97,4.715 17.344,4.953 17.344,4.953V7.928H15.83C14.34,7.928 13.875,8.83 13.875,9.755V12.073H17.203L16.671,15.563H13.875V24C19.612,23.094 24,18.1 24,12.073"/>
+                  </svg>
+                </a>
+                
+                <a href="https://twitter.com/intent/tweet?text={{ product.title | url_encode }}&url={{ shop.url }}{{ product.url | url_encode }}" target="_blank" style="color: #1DA1F2; font-size: 1.5rem;">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M22.46,6C21.69,6.35 20.86,6.58 20,6.69C20.88,6.16 21.56,5.32 21.88,4.31C21.05,4.81 20.13,5.16 19.16,5.36C18.37,4.5 17.26,4 16,4C13.65,4 11.73,5.92 11.73,8.29C11.73,8.63 11.77,8.96 11.84,9.27C8.28,9.09 5.11,7.38 3,4.79C2.63,5.42 2.42,6.16 2.42,6.94C2.42,8.43 3.17,9.75 4.33,10.5C3.62,10.5 2.96,10.3 2.38,10C2.38,10 2.38,10 2.38,10.03C2.38,12.11 3.86,13.85 5.82,14.24C5.46,14.34 5.08,14.39 4.69,14.39C4.42,14.39 4.15,14.36 3.89,14.31C4.43,16 6,17.26 7.89,17.29C6.43,18.45 4.58,19.13 2.56,19.13C2.22,19.13 1.88,19.11 1.54,19.07C3.44,20.29 5.7,21 8.12,21C16,21 20.33,14.46 20.33,8.79C20.33,8.6 20.33,8.42 20.32,8.23C21.16,7.63 21.88,6.87 22.46,6Z"/>
+                  </svg>
+                </a>
+                
+                <a href="https://wa.me/?text={{ product.title | url_encode }}%20{{ shop.url }}{{ product.url | url_encode }}" target="_blank" style="color: #25D366; font-size: 1.5rem;">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.472,14.382C17.124,14.382 16.775,14.382 16.424,14.382C15.96,14.382 15.644,14.751 15.644,15.214C15.644,15.678 15.96,16.047 16.424,16.047C16.775,16.047 17.124,16.047 17.472,16.047C17.936,16.047 18.252,15.678 18.252,15.214C18.252,14.751 17.936,14.382 17.472,14.382Z"/>
+                  </svg>
+                </a>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% comment %} منتجات ذات صلة {% endcomment %}
+{% if product.collections.first.products.size > 1 %}
+  <section class="related-products" style="padding: 4rem 0; background: var(--color-surface); margin-top: 4rem;">
+    <div class="container">
+      <h2 style="text-align: center; font-size: 2rem; font-weight: bold; color: var(--color-text); margin-bottom: 3rem;">
+        منتجات ذات صلة
+      </h2>
+      
+      <div class="products-grid">
+        {% for related_product in product.collections.first.products limit: 4 %}
+          {% unless related_product.id == product.id %}
+            {% render 'product-card', product: related_product, index: forloop.index %}
+          {% endunless %}
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+{% endif %}
+
+<script>
+  // تغيير الصورة الرئيسية
+  function changeMainImage(imageUrl) {
+    document.getElementById('main-product-image').src = imageUrl;
+    
+    // تحديث حدود الصور المصغرة
+    document.querySelectorAll('.product-thumbnail').forEach(thumb => {
+      thumb.style.borderColor = 'transparent';
+    });
+    event.target.style.borderColor = 'var(--color-primary)';
+  }
+
+  // تغيير الكمية
+  function changeQuantity(change) {
+    const input = document.getElementById('quantity-input');
+    const currentValue = parseInt(input.value);
+    const newValue = currentValue + change;
+    
+    if (newValue >= 1) {
+      input.value = newValue;
+    }
+  }
+
+  // تحديث السعر عند تغيير الخيارات
+  document.querySelector('.product-variant-select')?.addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    const price = selectedOption.dataset.price;
+    // يمكن إضافة كود لتحديث السعر هنا
+  });
+
+  // إضافة للمفضلة
+  function addToWishlist(productId) {
+    let wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+    
+    if (!wishlist.includes(productId)) {
+      wishlist.push(productId);
+      localStorage.setItem('wishlist', JSON.stringify(wishlist));
+      showNotification('تم إضافة المنتج إلى المفضلة!', 'success');
+    } else {
+      showNotification('المنتج موجود بالفعل في المفضلة', 'info');
+    }
+  }
+
+  // تعيين الصورة المصغرة الأولى كمحددة
+  document.addEventListener('DOMContentLoaded', function() {
+    const firstThumbnail = document.querySelector('.product-thumbnail');
+    if (firstThumbnail) {
+      firstThumbnail.style.borderColor = 'var(--color-primary)';
+    }
+  });
+</script>
+
+<style>
+  .product-thumbnail:hover {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+
+  .product-actions button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* تصميم متجاوب */
+  @media (max-width: 768px) {
+    .product-layout {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+    
+    .product-actions {
+      flex-direction: column;
+    }
+    
+    .product-thumbnails {
+      justify-content: center;
+    }
+  }
+
+  /* تحسين شكل النموذج */
+  .product-variant-select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(90, 103, 216, 0.2);
+  }
+
+  #quantity-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(90, 103, 216, 0.2);
+  }
+</style>
